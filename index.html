@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dr. 리뷰어 - 논문 평가·고도화 챗봇</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">🎓</div>
+      <div>
+        <h1>Dr. 리뷰어</h1>
+        <p>20년차 논문 심사위원 · 연구자</p>
+      </div>
+    </div>
+
+    <div class="upload-box" id="dropzone">
+      <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md" hidden>
+      <div class="upload-icon">📄</div>
+      <strong>논문 파일 업로드</strong>
+      <span>PDF · DOCX · TXT · MD<br>클릭하거나 끌어다 놓기</span>
+    </div>
+
+    <div class="paper-info" id="paperInfo" hidden>
+      <div class="paper-name" id="paperName"></div>
+      <div class="paper-meta" id="paperMeta"></div>
+      <button class="link-btn" id="removePaper">파일 제거</button>
+    </div>
+
+    <div class="section-title">논문 빌드업</div>
+    <div class="build-box">
+      <div class="build-stat" id="buildStat">초안 0자 · 기억 없음</div>
+      <p class="build-help">답변의 “📌 초안에 추가”를 누르면 확정본이 초안에 쌓이고, 이후 모든 답변이 이 초안과 대화 기억을 바탕으로 이어집니다.</p>
+      <div class="build-btns">
+        <button id="openBuild">초안·기억 열기</button>
+        <button id="downloadDraft">초안 저장(.md)</button>
+      </div>
+    </div>
+
+    <div class="section-title">빠른 요청</div>
+    <div class="quick">
+      <button data-q="이 논문을 국제 학술지 심사위원 관점에서 전체적으로 평가해 주세요. 정해진 형식(요약, 점수, 강점, 주요/사소한 문제점, 개선 로드맵, 심사 권고)에 맞춰 작성해 주세요.">📋 종합 심사 리포트</button>
+      <button data-q="이 논문의 연구 질문, 방법론, 결과 해석에서 논리적·통계적·방법론적 약점을 엄격하게 분석해 주세요.">🔍 방법론·논리 분석</button>
+      <button data-q="이 논문의 초록을 더 설득력 있고 학술적으로 완성도 높게 다시 써 주세요. 원문 대비 무엇을 개선했는지도 알려 주세요.">✍️ 초록 다시 쓰기</button>
+      <button data-q="이 논문의 서론을 연구 공백(research gap), 연구 질문, 기여점이 분명해지도록 한 단계 높은 수준으로 다시 써 주세요.">📖 서론 고도화</button>
+      <button data-q="논의(Discussion)와 결론을 이론적·실무적 시사점, 한계, 향후 연구가 강화되도록 다시 써 주세요.">🧭 논의·결론 강화</button>
+      <button data-q="이 논문이 상위 학술지에 게재되려면 무엇이 필요한지, 우선순위별 수정 계획(체크리스트)으로 알려 주세요.">🚀 게재 가능성 높이기</button>
+      <button data-q="지금까지의 대화 기억과 초안을 바탕으로, 다음에 보완하거나 이어서 써야 할 부분을 우선순위로 제안하고 가장 먼저 할 부분의 본문을 써 주세요.">🧱 다음 단계 이어쓰기</button>
+      <button data-q="이 논문 전체의 문장 표현, 학술적 어조, 일관성 문제를 지적하고 대표적인 문장 10개를 개선해서 보여 주세요.">🧹 문장·표현 교정</button>
+    </div>
+
+    <button class="link-btn danger" id="resetBtn">대화·기억 초기화</button>
+  </aside>
+
+  <main class="main">
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="big">🎓</div>
+        <h2>안녕하세요, Dr. 리뷰어입니다.</h2>
+        <p>논문 파일을 올려 주시면 20년 경력의 심사위원 관점에서<br>냉정하게 평가하고, 더 높은 수준으로 다듬어 드립니다.</p>
+        <ol>
+          <li>왼쪽에서 논문 파일(PDF/DOCX/TXT)을 업로드하세요.</li>
+          <li>‘종합 심사 리포트’ 등 빠른 요청을 누르거나 직접 질문하세요.</li>
+          <li>피드백을 받은 뒤 “2장을 다시 써 줘”처럼 이어서 요청하세요.</li>
+        </ol>
+      </div>
+    </div>
+
+    <form class="composer" id="composer">
+      <textarea id="input" rows="1" placeholder="메시지를 입력하세요 (Enter 전송, Shift+Enter 줄바꿈)"></textarea>
+      <button type="submit" id="sendBtn">전송</button>
+    </form>
+  </main>
+</div>
+
+<div class="modal" id="buildModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>논문 빌드업 노트</h3>
+      <button class="link-btn" id="closeBuild">닫기 ✕</button>
+    </div>
+    <p class="build-help dark">내용을 직접 고칠 수 있고, 닫으면 자동 저장됩니다. 이 두 내용은 모든 답변에 컨텍스트로 전달됩니다.</p>
+    <label>📝 논문 초안 (누적 확정본)</label>
+    <textarea id="draftText" rows="12" placeholder="‘초안에 추가’를 누른 내용이 여기에 쌓입니다."></textarea>
+    <label>🧠 대화 기억 (대화가 길어지면 자동 요약)</label>
+    <textarea id="memoryText" rows="8" placeholder="연구 목표, 투고 저널, 합의한 수정 방향 등을 직접 적어 둘 수도 있습니다."></textarea>
+    <div class="modal-foot">
+      <button class="link-btn danger" id="clearDraft">초안 비우기</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
